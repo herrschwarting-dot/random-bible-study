@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Random Bible Study</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main id="app">
+
+    <!-- ── WHEEL — dead center ── -->
+    <div class="col-wheel">
+      <h1 class="title">Random Bible Study</h1>
+      <div class="wheel-stage">
+        <div class="wheel" id="wheel"></div>
+        <div class="wheel-pointer" aria-hidden="true"></div>
+      </div>
+      <button id="spin-button" class="spin-button" type="button">Spin</button>
+    </div>
+
+    <!-- ── STUDY — upper area, right of wheel, left of docket ── -->
+    <div class="col-study">
+      <div class="study-card">
+        <div class="study-title">Study</div>
+        <div class="study-slot" data-slot="1">
+          <div class="study-index">1</div>
+          <div class="study-info">
+            <div class="study-book">—</div>
+            <div class="study-chapter"></div>
+          </div>
+        </div>
+        <div class="study-divider"></div>
+        <div class="study-slot" data-slot="2">
+          <div class="study-index">2</div>
+          <div class="study-info">
+            <div class="study-book">—</div>
+            <div class="study-chapter"></div>
+          </div>
+        </div>
+        <div class="study-divider"></div>
+        <div class="study-slot" data-slot="3">
+          <div class="study-index">3</div>
+          <div class="study-info">
+            <div class="study-book">—</div>
+            <div class="study-chapter"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── NOW PLAYING — top right corner ── -->
+    <div class="now-playing">
+      <span class="now-playing-label">Now Playing:</span>
+      <span class="now-playing-title">Mordecai's Vindication</span>
+    </div>
+
+    <!-- ── DOCKET — pinned right edge ── -->
+    <div class="col-docket">
+<div class="docket-outer">
+        <div class="docket-pointer" aria-hidden="true"></div>
+        <div class="docket-window" id="docket-window">
+          <ul class="docket-track" id="docket-track"></ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- RAVE: background behind UI, spotlights above UI but below wheel -->
+    <div id="rave-bg" class="rave-bg hidden" aria-hidden="true"></div>
+    <div id="spotlights" class="spotlights hidden" aria-hidden="true"></div>
+
+    <canvas id="confetti-canvas" class="confetti-canvas" aria-hidden="true"></canvas>
+    <div id="takeover" class="takeover hidden" aria-live="polite"></div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <script src="bible-data.js"></script>
+  <script src="particles.js"></script>
+  <script src="music.js"></script>
+  <script src="disco.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

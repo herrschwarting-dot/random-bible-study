@@ -1,0 +1,394 @@
+/* ============================================================
+   RANDOM BIBLE STUDY — stylesheet
+   ============================================================ */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; width: 100%; overflow: hidden; }
+
+body {
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  background: #ffffff;
+  color: #222;
+  -webkit-font-smoothing: antialiased;
+}
+
+.hidden { display: none !important; }
+
+/* ============================================================
+   Root container — everything is absolute inside here
+   ============================================================ */
+
+#app {
+  position: relative;
+  width: 100%; height: 100%;
+  overflow: hidden;
+}
+
+/* ============================================================
+   WHEEL — dead center of the page
+   ============================================================ */
+
+.col-wheel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  /* no width constraint — let content size it */
+}
+
+.title {
+  font-size: 1.1rem;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  color: #666;
+  text-transform: uppercase;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.wheel-stage {
+  position: relative;
+  width: min(70vmin, 540px);
+  height: min(70vmin, 540px);
+}
+
+.wheel {
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  border: 3px solid #ccc;
+  position: relative;
+  box-shadow: 0 4px 28px rgba(0,0,0,0.13);
+}
+
+.wheel::after {
+  content: "";
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: #333;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+}
+
+.wheel-pointer {
+  position: absolute;
+  top: -8px; left: 50%;
+  transform: translateX(-50%);
+  width: 0; height: 0;
+  border-left: 12px solid transparent;
+  border-right: 12px solid transparent;
+  border-top: 20px solid #222;
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));
+}
+
+.wheel-divider {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 1px;
+  height: 50%;
+  background: rgba(0,0,0,0.3);
+  transform-origin: bottom center;
+  pointer-events: none;
+}
+
+.wheel-label {
+  position: absolute;
+  font-size: 0.55rem;
+  font-weight: 600;
+  color: rgba(0,0,0,0.75);
+  white-space: nowrap;
+  pointer-events: none;
+  line-height: 1;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+}
+
+.wheel-label.chapter-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: rgba(0,0,0,0.8);
+}
+
+.spin-button {
+  position: relative;
+  z-index: 50; /* always above rave overlay */
+  appearance: none;
+  padding: 11px 44px;
+  font-size: 1rem;
+  font-family: inherit;
+  color: #222;
+  background: #f0f0f0;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.spin-button:hover    { background: #e6e6e6; }
+.spin-button:active   { background: #dcdcdc; }
+.spin-button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ============================================================
+   STUDY CARD — upper area, right of wheel, left of docket
+   Vertically: halfway between top of page and vertical center
+   Horizontally: right of wheel center, left of docket (220px wide)
+   ============================================================ */
+
+.col-study {
+  position: absolute;
+  /* halfway between top and center = 25% from top */
+  top: 25%;
+  transform: translateY(-50%);
+  /* sits in the gap between wheel right edge and docket left edge */
+  right: 230px; /* just clear of the 220px docket */
+  width: 200px;
+  z-index: 5;
+}
+
+.study-card {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 2px 14px rgba(0,0,0,0.08);
+}
+
+.study-title {
+  padding: 12px 18px 10px;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #888;
+  border-bottom: 1px solid #eee;
+  background: #fafafa;
+}
+
+.study-slot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  transition: background 0.25s;
+}
+
+.study-slot.filled { background: #f0f6ff; }
+
+.study-index {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #e0e0e0;
+  line-height: 1;
+  flex-shrink: 0;
+  width: 24px;
+  text-align: center;
+  transition: color 0.25s;
+}
+
+.study-slot.filled .study-index { color: #88b7e8; }
+
+.study-info { flex: 1 1 auto; min-width: 0; }
+
+.study-book {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #222;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.study-chapter {
+  font-size: 0.8rem;
+  color: #777;
+  margin-top: 2px;
+}
+
+.study-divider { height: 1px; background: #eee; margin: 0 18px; }
+
+/* ============================================================
+   DOCKET — pinned to right edge, full height
+   ============================================================ */
+
+.col-docket {
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 220px;
+  border-left: 1px solid #ddd;
+  background: #fafafa;
+  display: flex;
+  flex-direction: column;
+  overflow: visible; /* allows pointer to hang off left edge; docket-window clips the list */
+  z-index: 5;
+}
+
+.docket-label {
+  padding: 10px 14px 8px;
+  font-size: 0.67rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #888;
+  border-bottom: 1px solid #e8e8e8;
+  flex-shrink: 0;
+}
+
+.docket-outer {
+  position: relative;
+  flex: 1 1 auto;
+  display: flex;
+  overflow: visible; /* pointer hangs off left edge — docket-window does the clipping */
+  min-height: 0;
+}
+
+.docket-pointer {
+  position: absolute;
+  left: -8px; /* tip overhangs ~8px into the column */
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  pointer-events: none;
+  width: 0;
+  height: 0;
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-left: 16px solid #222;
+  filter: drop-shadow(2px 0px 2px rgba(0,0,0,0.2));
+}
+
+.docket-outer::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 26px;
+  border-top: 1px solid rgba(0,0,0,0.12);
+  border-bottom: 1px solid rgba(0,0,0,0.12);
+  background: rgba(255,255,255,0.3);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.docket-window {
+  flex: 1 1 auto;
+  overflow: hidden;
+  position: relative;
+  clip-path: inset(0); /* hard clip so list rows don't bleed past the window */
+  mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%);
+}
+
+.docket-track {
+  list-style: none;
+  position: absolute;
+  width: 100%;
+  top: 0;
+  will-change: transform;
+}
+
+.docket-track li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 10px 0 22px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(0,0,0,0.75);
+  height: 26px;
+  border-bottom: 1px solid rgba(0,0,0,0.25);
+}
+
+.docket-chapters {
+  font-size: 0.62rem;
+  font-weight: 400;
+  color: rgba(0,0,0,0.45);
+  margin-left: 6px;
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   Now Playing widget — top right, inset from edges
+   ============================================================ */
+
+.now-playing {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 2px 14px rgba(0,0,0,0.08);
+  z-index: 5;
+  white-space: nowrap;
+}
+
+.now-playing-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #888;
+  flex-shrink: 0;
+}
+
+.now-playing-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #222;
+}
+
+/* ============================================================
+   Rave / chaos (stubbed)
+   ============================================================ */
+
+.rave-bg    { position: fixed; inset: 0; z-index: 2;  pointer-events: none; background: rgba(0,0,0,0.88); }
+.spotlights { position: fixed; inset: 0; z-index: 12; pointer-events: none; overflow: hidden; }
+.center-cycler {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: clamp(3rem, 8vw, 7rem);
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 0 20px #fff, 0 0 40px #fff;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+}
+
+.confetti-canvas { position: fixed; inset: 0; z-index: 20; pointer-events: none; }
+
+.takeover {
+  position: fixed; inset: 0; z-index: 30;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: transparent;
+  color: #fff;
+  font-size: clamp(3rem, 14vw, 10rem);
+  font-weight: 900; letter-spacing: 0.02em; text-align: center;
+  text-shadow:
+    0 0 20px #fff, 0 0 50px #fff, 0 0 100px rgba(255,255,255,0.4),
+    -2px -2px 6px #000, 2px -2px 6px #000, -2px 2px 6px #000, 2px 2px 6px #000;
+  pointer-events: none;
+  line-height: 1.1;
+}
+
+.takeover-subtitle {
+  font-size: clamp(3rem, 14vw, 10rem);
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+body.rave-active .wheel      { border-color: #000; }
+body.rave-active .col-docket { border-left-color: #000; }
+body.rave-active .title      { visibility: hidden; }
+
+@media (prefers-reduced-motion: reduce) { /* TODO */ }
