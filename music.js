@@ -137,5 +137,12 @@ const Music = (() => {
     }
   }
 
+  // Resume playback if the browser paused it when the tab was hidden
+  document.addEventListener("visibilitychange", () => {
+    if (!stopped && player && !document.hidden) {
+      player.play().catch(() => {});
+    }
+  });
+
   return { start, stop };
 })();

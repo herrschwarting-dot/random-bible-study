@@ -387,8 +387,8 @@ body {
   letter-spacing: 0.02em;
 }
 
-body.rave-active .wheel      { border-color: #000; }
-body.rave-active .col-docket { border-left-color: #000; }
-body.rave-active .title      { visibility: hidden; }
+body.rave-active .wheel        { border-color: #000; }
+body.rave-active .col-docket  { border-left-color: #000; background: #000; }
+body.rave-active .title        { visibility: hidden; }
 
 @media (prefers-reduced-motion: reduce) { /* TODO */ }
