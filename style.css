@@ -13,6 +13,7 @@ body {
 }
 
 .hidden { display: none !important; }
+.is-invisible { visibility: hidden !important; }
 
 /* ============================================================
    Root container — everything is absolute inside here
@@ -42,13 +43,28 @@ body {
 }
 
 .title {
-  font-size: 1.1rem;
+  /* Same font + size whether it's rave mode or not —
+     only color + per-letter effects change in rave mode. */
+  font-family: "Bungee Inline", "Bungee", "Helvetica Neue", Arial, sans-serif;
+  font-size: 2.2rem;
   font-weight: 400;
-  letter-spacing: 0.06em;
-  color: #666;
+  letter-spacing: 0.08em;
+  color: #fff;
   text-transform: uppercase;
   text-align: center;
   white-space: nowrap;
+  /* White fill with black outline. -webkit-text-stroke handles Chromium/WebKit;
+     the layered text-shadow gives a matching outline as a fallback. */
+  -webkit-text-stroke: 2px #000;
+  text-shadow:
+    -2px -2px 0 #000,
+     2px -2px 0 #000,
+    -2px  2px 0 #000,
+     2px  2px 0 #000,
+    -2px  0   0 #000,
+     2px  0   0 #000,
+     0   -2px 0 #000,
+     0    2px 0 #000;
 }
 
 .wheel-stage {
@@ -87,6 +103,7 @@ body {
   filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));
 }
 
+
 .wheel-divider {
   position: absolute;
   top: 0;
@@ -117,87 +134,89 @@ body {
 
 .spin-button {
   position: relative;
-  z-index: 50; /* always above rave overlay */
+  z-index: 50;
   appearance: none;
-  padding: 11px 44px;
-  font-size: 1rem;
-  font-family: inherit;
-  color: #222;
-  background: #f0f0f0;
-  border: 1px solid #bbb;
-  border-radius: 4px;
+  padding: 6px 44px;
+  font-size: 1.6rem;
+  line-height: 1.1;
+  font-family: "Bungee", "Bungee Inline", "Helvetica Neue", Arial, sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fff;
+  -webkit-text-stroke: 2px #000;
+  text-shadow:
+    -2px -2px 0 #000,
+     2px -2px 0 #000,
+    -2px  2px 0 #000,
+     2px  2px 0 #000,
+    -2px  0   0 #000,
+     2px  0   0 #000,
+     0   -2px 0 #000,
+     0    2px 0 #000;
+  background: #fff;
+  border: 3px solid #000;
+  border-radius: 6px;
   cursor: pointer;
-  transition: background 0.15s;
   white-space: nowrap;
+  box-shadow: none;
+  transition: background 0.05s ease-out, transform 0.05s ease-out;
+  animation: none;
 }
 
-.spin-button:hover    { background: #e6e6e6; }
-.spin-button:active   { background: #dcdcdc; }
-.spin-button:disabled { opacity: 0.5; cursor: not-allowed; }
+.spin-button:hover {
+  background: #f3f3f3;
+  transform: translateY(-1px);
+}
+.spin-button:active {
+  transform: translateY(4px);
+  background: #e4e4e4;
+  box-shadow: none;
+  transition: background 0.02s ease-in, transform 0.02s ease-in;
+}
+.spin-button:disabled { opacity: 0.45; cursor: not-allowed; animation: none; }
 
 /* ============================================================
-   STUDY CARD — upper area, right of wheel, left of docket
-   Vertically: halfway between top of page and vertical center
-   Horizontally: right of wheel center, left of docket (220px wide)
+   STUDY ROW — three horizontal boxes above the wheel.
+   Replaces the title after the first spin is hit.
    ============================================================ */
 
-.col-study {
-  position: absolute;
-  /* halfway between top and center = 25% from top */
-  top: 25%;
-  transform: translateY(-50%);
-  /* sits in the gap between wheel right edge and docket left edge */
-  right: 230px; /* just clear of the 220px docket */
-  width: 200px;
-  z-index: 5;
+.study-row {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  align-items: stretch;
+  justify-content: center;
 }
 
-.study-card {
-  width: 100%;
-  border: 1px solid #ddd;
-  border-radius: 12px;
-  overflow: hidden;
-  background: #fff;
-  box-shadow: 0 2px 14px rgba(0,0,0,0.08);
-}
-
-.study-title {
-  padding: 12px 18px 10px;
-  font-size: 0.68rem;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: #888;
-  border-bottom: 1px solid #eee;
-  background: #fafafa;
-}
-
-.study-slot {
+.study-row .study-slot {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 18px;
-  transition: background 0.25s;
+  gap: 10px;
+  padding: 8px 14px;
+  min-width: 150px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  transition: background 0.25s, border-color 0.25s;
 }
 
-.study-slot.filled { background: #f0f6ff; }
-
-.study-index {
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: #e0e0e0;
-  line-height: 1;
-  flex-shrink: 0;
-  width: 24px;
-  text-align: center;
-  transition: color 0.25s;
+/* Slot colors are painted inline by script.js at startup (and on reset),
+   so the boxes are already rave-colored before they become visible.
+   Text is white from the start to pop against any saturated background. */
+.study-row .study-slot {
+  color: #fff;
 }
-
-.study-slot.filled .study-index { color: #88b7e8; }
+.study-row .study-slot .study-book {
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.35);
+}
 
 .study-info { flex: 1 1 auto; min-width: 0; }
 
 .study-book {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: #222;
   line-height: 1.2;
@@ -207,12 +226,20 @@ body {
 }
 
 .study-chapter {
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   color: #777;
   margin-top: 2px;
 }
 
-.study-divider { height: 1px; background: #eee; margin: 0 18px; }
+/* Rave-mode styling — empty boxes stay dark; filled ones keep their painted rave hue. */
+body.rave-active .study-row .study-slot {
+  background: rgba(0,0,0,0.55);
+  border-color: rgba(255,255,255,0.2);
+  color: #fff;
+  box-shadow: 0 2px 14px rgba(0,0,0,0.4);
+}
+body.rave-active .study-row .study-book    { color: #fff; }
+body.rave-active .study-row .study-chapter { color: rgba(255,255,255,0.7); }
 
 /* ============================================================
    DOCKET — pinned to right edge, full height
@@ -315,27 +342,33 @@ body {
 }
 
 /* ============================================================
-   Now Playing widget — top right, inset from edges
+   Music dock — top-left. "Now Playing" row, then upcoming tracks
+   fade into nothing. The last one is cropped to top-halves only —
+   it's almost a rumor.
    ============================================================ */
 
-.now-playing {
+.music-dock {
   position: absolute;
   top: 24px;
   left: 24px;
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
-  border: 1px solid #ddd;
-  border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 2px 14px rgba(0,0,0,0.08);
+  flex-direction: column;
+  gap: 2px;
   z-index: 5;
   white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  font-family: "Space Mono", ui-monospace, "Courier New", monospace;
+}
+
+.now-playing-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .now-playing-label {
-  font-size: 0.68rem;
+  font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.14em;
   color: #888;
@@ -343,17 +376,54 @@ body {
 }
 
 .now-playing-title {
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: 1.15rem;
+  font-weight: 700;
   color: #222;
 }
+
+.upcoming {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #222;
+  padding-left: 2px;
+  line-height: 1.15;
+}
+.upcoming-1 { opacity: 0.45; }
+.upcoming-2 { opacity: 0.22; }
+/* Only the top half of the letters pokes through — a near-subliminal hint. */
+.upcoming-3 {
+  opacity: 0.12;
+  height: 0.42em;
+  overflow: hidden;
+  line-height: 1;
+}
+.upcoming-3 > span { display: inline-block; line-height: 1; }
+
+body.rave-active .now-playing-label { color: rgba(255,255,255,0.75); }
+body.rave-active .now-playing-title,
+body.rave-active .upcoming           { color: #fff; }
 
 /* ============================================================
    Rave / chaos (stubbed)
    ============================================================ */
 
-.rave-bg    { position: fixed; inset: 0; z-index: 2;  pointer-events: none; background: rgba(0,0,0,0.88); }
-.spotlights { position: fixed; inset: 0; z-index: 12; pointer-events: none; overflow: hidden; }
+/* rave-off keeps the element in the compositor but invisible, so the first
+   Spin doesn't pay the cost of layout + paint for 85 beams all at once. */
+.rave-off { opacity: 0 !important; pointer-events: none !important; }
+.rave-bg    { position: fixed; inset: 0; z-index: 2;  pointer-events: none; background: #000; }
+.spotlights {
+  position: fixed; inset: 0;
+  z-index: 12;
+  pointer-events: none;
+  overflow: hidden;
+  /* Blend the whole spotlight layer with what's below once, instead of
+     blending every single beam — much cheaper to composite. */
+  mix-blend-mode: screen;
+  /* Beams all transform-only → keep this layer on the GPU compositor. */
+  will-change: transform;
+  /* Beams will use beam-specific width changes; let them animate smoothly. */
+  transition: none;
+}
 .center-cycler {
   position: absolute; top: 50%; left: 50%;
   transform: translate(-50%, -50%);
@@ -389,6 +459,110 @@ body {
 
 body.rave-active .wheel        { border-color: #000; }
 body.rave-active .col-docket  { border-left-color: #000; background: #000; }
-body.rave-active .title        { visibility: hidden; }
+
+/* Rave title — each letter is wrapped in a <span class="rave-letter">
+   by script.js when the party starts. Keeps the font + size from .title;
+   only adds per-letter color, black outline, and a colored glow. */
+body.rave-active .title {
+  color: #fff; /* fallback; per-letter spans override */
+}
+
+/* Rave-mode button — transparent fill, solid rave-colored border,
+   glowing white text. Color is set inline via --rave-color by script.js. */
+body.rave-active .spin-button {
+  background: transparent;
+  border: 3px solid var(--rave-color, #fff);
+  box-shadow: none;
+  animation: none;
+}
+body.rave-active .spin-button:hover {
+  background: var(--rave-fill, rgba(255,255,255,0.15));
+  box-shadow: none;
+  transform: translateY(-1px);
+}
+body.rave-active .spin-button:active {
+  background: var(--rave-fill, rgba(255,255,255,0.15));
+  transform: translateY(4px);
+  box-shadow: none;
+}
+
+body.rave-active .spin-button .rave-letter {
+  display: inline-block;
+  color: var(--letter-color, #fff);
+  -webkit-text-stroke: 2px #000;
+  text-shadow:
+    -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000,
+    -2px  0   0 #000, 2px  0   0 #000,  0  -2px 0 #000, 0  2px 0 #000,
+     0 0 10px var(--glow, #fff),
+     0 0 18px var(--glow, #fff);
+}
+
+body.rave-active .title .rave-letter {
+  display: inline-block;
+  color: var(--letter-color, #fff);
+  text-shadow:
+    -2px -2px 0 #000,
+     2px -2px 0 #000,
+    -2px  2px 0 #000,
+     2px  2px 0 #000,
+    -2px  0   0 #000,
+     2px  0   0 #000,
+     0   -2px 0 #000,
+     0    2px 0 #000,
+     0 0 10px var(--glow, #fff),
+     0 0 18px var(--glow, #fff);
+  -webkit-text-stroke: 1px #000;
+}
+
+/* ============================================================
+   Dev theme picker — bottom-right floating panel
+   ============================================================ */
+.theme-picker {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  z-index: 60;
+  background: rgba(0,0,0,0.75);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+.theme-picker-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: rgba(255,255,255,0.7);
+  padding: 2px 4px 4px;
+}
+.theme-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #fff;
+  font-size: 0.72rem;
+}
+.theme-row:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.08); }
+.theme-swatch {
+  width: 12px; height: 12px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.3);
+}
+.theme-name {
+  margin-left: 4px;
+  white-space: nowrap;
+}
 
 @media (prefers-reduced-motion: reduce) { /* TODO */ }
+

@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Random Bible Study</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee+Inline&family=Bungee&family=Space+Mono:wght@400;700&display=swap" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -11,7 +14,31 @@
 
     <!-- ── WHEEL — dead center ── -->
     <div class="col-wheel">
-      <h1 class="title">Random Bible Study</h1>
+      <h1 class="title" id="wheel-title">Random Bible Study</h1>
+
+      <!-- Study row — laid out from the start (so the title sits above it),
+           but hidden via visibility until the first spin so the space is reserved. -->
+      <div class="study-row is-invisible" id="study-row">
+        <div class="study-slot" data-slot="1">
+          <div class="study-info">
+            <div class="study-book">—</div>
+            <div class="study-chapter"></div>
+          </div>
+        </div>
+        <div class="study-slot" data-slot="2">
+          <div class="study-info">
+            <div class="study-book">—</div>
+            <div class="study-chapter"></div>
+          </div>
+        </div>
+        <div class="study-slot" data-slot="3">
+          <div class="study-info">
+            <div class="study-book">—</div>
+            <div class="study-chapter"></div>
+          </div>
+        </div>
+      </div>
+
       <div class="wheel-stage">
         <div class="wheel" id="wheel"></div>
         <div class="wheel-pointer" aria-hidden="true"></div>
@@ -19,40 +46,15 @@
       <button id="spin-button" class="spin-button" type="button">Spin</button>
     </div>
 
-    <!-- ── STUDY — upper area, right of wheel, left of docket ── -->
-    <div class="col-study">
-      <div class="study-card">
-        <div class="study-title">Study</div>
-        <div class="study-slot" data-slot="1">
-          <div class="study-index">1</div>
-          <div class="study-info">
-            <div class="study-book">—</div>
-            <div class="study-chapter"></div>
-          </div>
-        </div>
-        <div class="study-divider"></div>
-        <div class="study-slot" data-slot="2">
-          <div class="study-index">2</div>
-          <div class="study-info">
-            <div class="study-book">—</div>
-            <div class="study-chapter"></div>
-          </div>
-        </div>
-        <div class="study-divider"></div>
-        <div class="study-slot" data-slot="3">
-          <div class="study-index">3</div>
-          <div class="study-info">
-            <div class="study-book">—</div>
-            <div class="study-chapter"></div>
-          </div>
-        </div>
+    <!-- ── MUSIC DOCK — top left, "now playing" + ghostly upcoming tracks ── -->
+    <div class="music-dock">
+      <div class="now-playing-row">
+        <span class="now-playing-label">Now Playing:</span>
+        <span class="now-playing-title" id="now-playing-title">—</span>
       </div>
-    </div>
-
-    <!-- ── NOW PLAYING — top right corner ── -->
-    <div class="now-playing">
-      <span class="now-playing-label">Now Playing:</span>
-      <span class="now-playing-title">Mordecai's Vindication</span>
+      <div class="upcoming upcoming-1" id="upcoming-1">—</div>
+      <div class="upcoming upcoming-2" id="upcoming-2">—</div>
+      <div class="upcoming upcoming-3" id="upcoming-3"><span>—</span></div>
     </div>
 
     <!-- ── DOCKET — pinned right edge ── -->
@@ -66,8 +68,8 @@
     </div>
 
     <!-- RAVE: background behind UI, spotlights above UI but below wheel -->
-    <div id="rave-bg" class="rave-bg hidden" aria-hidden="true"></div>
-    <div id="spotlights" class="spotlights hidden" aria-hidden="true"></div>
+    <div id="rave-bg" class="rave-bg rave-off" aria-hidden="true"></div>
+    <div id="spotlights" class="spotlights rave-off" aria-hidden="true"></div>
 
     <canvas id="confetti-canvas" class="confetti-canvas" aria-hidden="true"></canvas>
     <div id="takeover" class="takeover hidden" aria-live="polite"></div>

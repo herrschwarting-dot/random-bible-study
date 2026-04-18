@@ -1,148 +1,137 @@
 /* ============================================================
-   music.js — playlist with crossfade loop
+   music.js — random-shuffle playlist loop
    ------------------------------------------------------------
    Public API:
-     Music.start()  — begin playback from first track
-     Music.stop()   — fade out and halt
+     Music.start()
+     Music.stop()
+     Music.onChange(cb)       — cb({ current, upcoming: [t1, t2, t3] })
+     Music.getCurrent()       — pretty name of current track, or null
+     Music.getUpcoming()      — array of next 3 pretty names (may repeat if playlist is short)
    ============================================================ */
 
 const Music = (() => {
   "use strict";
 
   const PLAYLIST = [
+    "music/Into The BibleVerse.wav",
+    "music/Lord's Presence.wav",
     "music/Mordecai's Vindication.wav",
   ];
 
-  const FADE_S    = 3;    // crossfade duration in seconds
-  const PRELOAD_S = 10;   // start preloading next track this many seconds before crossfade
+  let trackIdx = -1;
+  let queue    = [];  // upcoming indices, pre-rolled so onChange can report them
+  let player   = null;
+  let stopped  = true;
 
-  let trackIdx   = 0;
-  let player     = null;  // currently playing Audio
-  let nextPlayer = null;  // preloaded and ready to go
-  let stopped    = true;
-  let xfadeTimer   = null;
-  let preloadTimer = null;
+  const subs = new Set();
 
-  // Pre-buffer the first track immediately so first Spin has no delay
-  const primed = new Audio(PLAYLIST[0]);
-  primed.preload = "auto";
-  primed.load();
+  // Strip "music/" prefix + extension for display
+  function prettyName(path) {
+    if (!path) return null;
+    const file = path.split("/").pop();
+    return file.replace(/\.[^.]+$/, "");
+  }
 
-  function fadeTo(audio, targetVol, durationMs, onComplete) {
-    const startVol  = audio.volume;
-    const startTime = performance.now();
-    function tick(now) {
-      const t = Math.min(1, (now - startTime) / durationMs);
-      audio.volume = startVol + (targetVol - startVol) * t;
-      if (t < 1) {
-        requestAnimationFrame(tick);
-      } else {
-        audio.volume = targetVol;
-        if (onComplete) onComplete();
-      }
+  function getCurrent()  { return trackIdx >= 0 ? prettyName(PLAYLIST[trackIdx]) : null; }
+  function getUpcoming() { return queue.slice(0, 3).map(i => prettyName(PLAYLIST[i])); }
+
+  function notify() {
+    const payload = { current: getCurrent(), upcoming: getUpcoming() };
+    subs.forEach(cb => { try { cb(payload); } catch (e) {} });
+  }
+
+  function onChange(cb) {
+    if (typeof cb !== "function") return;
+    subs.add(cb);
+    cb({ current: getCurrent(), upcoming: getUpcoming() });
+  }
+
+  // Pick an index that isn't `avoid` (when possible)
+  function pickNext(avoid) {
+    if (PLAYLIST.length <= 1) return 0;
+    let n = Math.floor(Math.random() * PLAYLIST.length);
+    if (n === avoid) n = (n + 1) % PLAYLIST.length;
+    return n;
+  }
+
+  // Refill queue so we always know the next few tracks ahead of time.
+  function refillQueue() {
+    const lookahead = 3;
+    let last = trackIdx;
+    while (queue.length < lookahead) {
+      const n = pickNext(last);
+      queue.push(n);
+      last = n;
     }
-    requestAnimationFrame(tick);
   }
 
-  function clearTimers() {
-    if (xfadeTimer)   { clearTimeout(xfadeTimer);   xfadeTimer   = null; }
-    if (preloadTimer) { clearTimeout(preloadTimer);  preloadTimer = null; }
-  }
-
-  function scheduleTimers(incoming) {
-    const duration = incoming.duration;
-    if (!duration || isNaN(duration)) return;
-
-    const xfadeDelay   = Math.max(0, (duration - FADE_S)            * 1000);
-    const preloadDelay = Math.max(0, (duration - FADE_S - PRELOAD_S) * 1000);
-
-    // Preload the next track well before crossfade
-    preloadTimer = setTimeout(() => {
-      const nextIdx  = (trackIdx + 1) % PLAYLIST.length;
-      nextPlayer = new Audio(PLAYLIST[nextIdx]);
-      nextPlayer.preload = "auto";
-      nextPlayer.volume  = 0;
-      nextPlayer.load();
-    }, preloadDelay);
-
-    // Crossfade when FADE_S from end
-    xfadeTimer = setTimeout(() => {
-      if (player === incoming && !stopped) crossfadeToNext();
-    }, xfadeDelay);
-  }
-
-  function crossfadeToNext() {
+  function playTrack(idx) {
     if (stopped) return;
-    trackIdx = (trackIdx + 1) % PLAYLIST.length;
 
-    const incoming = nextPlayer || new Audio(PLAYLIST[trackIdx]);
-    nextPlayer = null;
-    incoming.volume = 0;
-    incoming.play().catch(() => {});
-    fadeTo(incoming, 1, FADE_S * 1000);
+    if (player) { player.pause(); player.src = ""; player = null; }
 
-    // Fade out old player
-    const outgoing = player;
-    fadeTo(outgoing, 0, FADE_S * 1000, () => {
-      outgoing.pause();
-      outgoing.src = "";
-    });
+    trackIdx = idx;
+    refillQueue();
 
-    player = incoming;
+    player = new Audio(PLAYLIST[idx]);
+    player.volume = 1;
+    player.play().catch(() => {});
 
-    // Schedule next cycle once duration is known
-    if (incoming.readyState >= 1 && incoming.duration) {
-      scheduleTimers(incoming);
-    } else {
-      incoming.addEventListener("loadedmetadata", () => scheduleTimers(incoming), { once: true });
-    }
-
-    // Safety net
-    incoming.addEventListener("ended", () => {
-      if (player === incoming && !stopped) crossfadeToNext();
+    // Fire change notification when playback actually begins
+    player.addEventListener("playing", () => { notify(); }, { once: true });
+    player.addEventListener("ended", () => {
+      if (stopped) return;
+      const next = queue.shift();
+      playTrack(next != null ? next : pickNext(trackIdx));
     }, { once: true });
   }
 
   function start() {
     if (!stopped) return;
-    stopped  = false;
-    trackIdx = 0;
-
-    player = primed; // already buffered, plays instantly
-    player.volume = 1;
-    player.play().catch(() => {});
-
-    if (player.readyState >= 1 && player.duration) {
-      scheduleTimers(player);
-    } else {
-      player.addEventListener("loadedmetadata", () => scheduleTimers(player), { once: true });
-    }
-
-    player.addEventListener("ended", () => {
-      if (player && !stopped) crossfadeToNext();
-    }, { once: true });
+    stopped = false;
+    const firstIdx = Math.floor(Math.random() * PLAYLIST.length);
+    queue = [];
+    playTrack(firstIdx);
   }
 
   function stop() {
     stopped = true;
-    clearTimers();
-    if (nextPlayer) { nextPlayer.src = ""; nextPlayer = null; }
-    if (player) {
-      const outgoing = player;
-      player = null;
-      fadeTo(outgoing, 0, 1500, () => {
-        outgoing.pause();
-        outgoing.src = "";
-      });
-    }
+    if (player) { player.pause(); player.src = ""; player = null; }
+    trackIdx = -1;
+    // Clear then refill so Now Playing reads "—" but the on-deck slots
+    // still show what's waiting for the next session.
+    queue = [];
+    refillQueue();
+    notify();
   }
 
-  // Resume playback if the browser paused it when the tab was hidden
-  document.addEventListener("visibilitychange", () => {
-    if (!stopped && player && !document.hidden) {
-      player.play().catch(() => {});
-    }
+  // Pre-fill the upcoming queue at load so the dock can show what's "on deck"
+  // before the rave starts. trackIdx stays -1 until actual playback begins,
+  // so Now Playing still reads "—" until rave kicks in.
+  refillQueue();
+
+  // Warm the audio cache at page load. Each track gets fetched + decoded into
+  // the browser's HTTP cache now, so the first real Music.start() doesn't
+  // stall the main thread decoding a fresh .wav.
+  PLAYLIST.forEach(src => {
+    const warm = new Audio();
+    warm.preload = "auto";
+    warm.src = src;
   });
 
-  return { start, stop };
+  document.addEventListener("visibilitychange", () => {
+    if (stopped || document.hidden) return;
+    if (player) player.play().catch(() => {});
+  });
+
+  // Force a specific track by substring match against PLAYLIST paths.
+  // Used to hard-pick "Into The BibleVerse" for the finale track.
+  function play(match) {
+    const idx = PLAYLIST.findIndex(p => p.includes(match));
+    if (idx < 0) return;
+    stopped = false;
+    playTrack(idx);
+  }
+
+  return { start, stop, play, onChange, getCurrent, getUpcoming };
 })();
