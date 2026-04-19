@@ -363,13 +363,12 @@ body.rave-active .study-row .study-chapter { color: rgba(255,255,255,0.7); }
 
 .now-playing-row {
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
-  gap: 10px;
+  gap: 2px;
 }
 
-/* The song title + upcoming tracks stack as a single column, all left-aligned
-   to the same edge — like a reel/wheel scrolling tracks past a window. The
-   "Now Playing:" label sits to the left of the whole stack. */
+/* Song title + upcoming tracks stack below the "Now Playing:" label. */
 .now-playing-column {
   display: flex;
   flex-direction: column;
