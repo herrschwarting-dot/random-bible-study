@@ -14,8 +14,8 @@ const Music = (() => {
 
   const PLAYLIST = [
     "music/Into The BibleVerse.wav",
-    "music/Lord's Presence.wav",
     "music/Mordecai's Vindication.wav",
+    "music/Ten-Stringed Instrument.wav",
   ];
 
   let trackIdx = -1;
