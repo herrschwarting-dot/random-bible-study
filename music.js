@@ -14,7 +14,8 @@ const Music = (() => {
 
   const PLAYLIST = [
     "music/Mordecai's Vindication.wav",
-    "music/Ten-Stringed Instrument.wav",
+    "music/David's Ten-Stringed Instrument.wav",
+    "music/Esther's Boldness.wav",
   ];
 
   // Reserved finale track — not in the shuffle pool. Plays once via
