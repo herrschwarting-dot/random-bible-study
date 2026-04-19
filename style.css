@@ -363,8 +363,18 @@ body.rave-active .study-row .study-chapter { color: rgba(255,255,255,0.7); }
 
 .now-playing-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
+}
+
+/* The song title + upcoming tracks stack as a single column, all left-aligned
+   to the same edge — like a reel/wheel scrolling tracks past a window. The
+   "Now Playing:" label sits to the left of the whole stack. */
+.now-playing-column {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
 .now-playing-label {
@@ -379,25 +389,26 @@ body.rave-active .study-row .study-chapter { color: rgba(255,255,255,0.7); }
   font-size: 1.15rem;
   font-weight: 700;
   color: #222;
+  /* Reserve the row's height even when empty so upcoming tracks don't
+     collapse up next to the "Now Playing:" label. Keeps the reel layout
+     intact pre-rave. */
+  display: block;
+  min-height: 1.15em;
+  line-height: 1;
 }
 
 .upcoming {
   font-size: 0.82rem;
   font-weight: 500;
   color: #222;
-  padding-left: 2px;
   line-height: 1.15;
 }
 .upcoming-1 { opacity: 0.45; }
 .upcoming-2 { opacity: 0.22; }
-/* Only the top half of the letters pokes through — a near-subliminal hint. */
-.upcoming-3 {
-  opacity: 0.12;
-  height: 0.42em;
-  overflow: hidden;
-  line-height: 1;
-}
-.upcoming-3 > span { display: inline-block; line-height: 1; }
+/* Barely there — the last on-deck track is a whisper, full-height but
+   almost transparent. A near-subliminal hint rather than a clipped tease. */
+.upcoming-3 { opacity: 0.08; }
+.upcoming-3 > span { display: inline-block; }
 
 body.rave-active .now-playing-label { color: rgba(255,255,255,0.75); }
 body.rave-active .now-playing-title,
@@ -490,11 +501,11 @@ body.rave-active .spin-button .rave-letter {
   display: inline-block;
   color: var(--letter-color, #fff);
   -webkit-text-stroke: 2px #000;
+  /* No glow on the button letters — just the crisp black outline.
+     The title still glows; the button stays grounded. */
   text-shadow:
     -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000,
-    -2px  0   0 #000, 2px  0   0 #000,  0  -2px 0 #000, 0  2px 0 #000,
-     0 0 10px var(--glow, #fff),
-     0 0 18px var(--glow, #fff);
+    -2px  0   0 #000, 2px  0   0 #000,  0  -2px 0 #000, 0  2px 0 #000;
 }
 
 body.rave-active .title .rave-letter {

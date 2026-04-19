@@ -135,7 +135,6 @@
         slots.forEach((node, i) => {
           if (!node) return;
           const name = (upcoming && upcoming[i]) || "—";
-          // upcoming-3 wraps in a <span> so CSS can clip the bottom half.
           if (node.firstElementChild) node.firstElementChild.textContent = name;
           else node.textContent = name;
         });
@@ -486,7 +485,7 @@
       pointerEvents: "none",
       zIndex:      "50",
       transform:   "translate(0, 0)",
-      transition:  "transform 0.1s ease-out, font-size 0.1s ease-out, font-weight 0.1s ease-out, color 0.1s ease-out, opacity 0.1s ease-out",
+      transition:  "transform 0.3s ease-out, font-size 0.3s ease-out, font-weight 0.3s ease-out, color 0.3s ease-out, opacity 0.3s ease-out",
     });
     document.body.appendChild(ghost);
     el.nowPlaying.style.visibility = "hidden";
@@ -504,7 +503,7 @@
     setTimeout(() => {
       el.nowPlaying.style.visibility = "";
       ghost.remove();
-    }, 120);
+    }, 320);
   }
 
   // ── Dev theme picker ─────────────────────────────────────────

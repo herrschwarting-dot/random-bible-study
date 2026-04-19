@@ -13,15 +13,39 @@ const Music = (() => {
   "use strict";
 
   const PLAYLIST = [
-    "music/Into The BibleVerse.wav",
     "music/Mordecai's Vindication.wav",
     "music/Ten-Stringed Instrument.wav",
   ];
+
+  // Reserved finale track — not in the shuffle pool. Plays once via
+  // Music.play("Into The BibleVerse") after the last spin, then the music
+  // stops so the Bible study can take focus.
+  const FINALE_TRACK = "music/Into The BibleVerse.wav";
 
   let trackIdx = -1;
   let queue    = [];  // upcoming indices, pre-rolled so onChange can report them
   let player   = null;
   let stopped  = true;
+  let isFinale = false;
+
+  // Fisher-Yates in-place shuffle
+  function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  // Build a fresh shuffled bag of all playlist indices. Ensures the first
+  // item isn't `avoid` so we don't get a back-to-back repeat across bags.
+  function makeBag(avoid) {
+    const bag = shuffle(PLAYLIST.map((_, i) => i));
+    if (bag.length > 1 && bag[0] === avoid) {
+      [bag[0], bag[1]] = [bag[1], bag[0]];
+    }
+    return bag;
+  }
 
   const subs = new Set();
 
@@ -32,8 +56,16 @@ const Music = (() => {
     return file.replace(/\.[^.]+$/, "");
   }
 
-  function getCurrent()  { return trackIdx >= 0 ? prettyName(PLAYLIST[trackIdx]) : null; }
-  function getUpcoming() { return queue.slice(0, 3).map(i => prettyName(PLAYLIST[i])); }
+  let finaleName = null;
+  function getCurrent()  {
+    if (isFinale) return finaleName;
+    return trackIdx >= 0 ? prettyName(PLAYLIST[trackIdx]) : null;
+  }
+  function getUpcoming() {
+    // During the finale there are no "on deck" tracks — music ends after it.
+    if (isFinale) return ["—", "—", "—"];
+    return queue.slice(0, 3).map(i => prettyName(PLAYLIST[i]));
+  }
 
   function notify() {
     const payload = { current: getCurrent(), upcoming: getUpcoming() };
@@ -46,22 +78,15 @@ const Music = (() => {
     cb({ current: getCurrent(), upcoming: getUpcoming() });
   }
 
-  // Pick an index that isn't `avoid` (when possible)
-  function pickNext(avoid) {
-    if (PLAYLIST.length <= 1) return 0;
-    let n = Math.floor(Math.random() * PLAYLIST.length);
-    if (n === avoid) n = (n + 1) % PLAYLIST.length;
-    return n;
-  }
-
-  // Refill queue so we always know the next few tracks ahead of time.
+  // True shuffle: every track plays exactly once before any repeats.
+  // The queue is continuously topped up with fresh shuffled bags so the
+  // upcoming-3 lookahead always has content even on a tiny playlist.
   function refillQueue() {
     const lookahead = 3;
-    let last = trackIdx;
     while (queue.length < lookahead) {
-      const n = pickNext(last);
-      queue.push(n);
-      last = n;
+      const last = queue.length ? queue[queue.length - 1] : trackIdx;
+      const bag  = makeBag(last);
+      queue.push(...bag);
     }
   }
 
@@ -70,6 +95,7 @@ const Music = (() => {
 
     if (player) { player.pause(); player.src = ""; player = null; }
 
+    isFinale = false;
     trackIdx = idx;
     refillQueue();
 
@@ -81,23 +107,50 @@ const Music = (() => {
     player.addEventListener("playing", () => { notify(); }, { once: true });
     player.addEventListener("ended", () => {
       if (stopped) return;
-      const next = queue.shift();
-      playTrack(next != null ? next : pickNext(trackIdx));
+      // refillQueue keeps the queue non-empty, so shift is always safe.
+      refillQueue();
+      playTrack(queue.shift());
+    }, { once: true });
+  }
+
+  // Finale playback: play the reserved track once, then stop everything so
+  // the Bible study can have silence. Not part of the shuffle pool.
+  function playFinale() {
+    if (player) { player.pause(); player.src = ""; player = null; }
+
+    stopped    = false;
+    isFinale   = true;
+    trackIdx   = -1;
+    queue      = [];
+    finaleName = prettyName(FINALE_TRACK);
+
+    player = new Audio(FINALE_TRACK);
+    player.volume = 1;
+    player.play().catch(() => {});
+
+    player.addEventListener("playing", () => { notify(); }, { once: true });
+    player.addEventListener("ended", () => {
+      // Music is done for the session — stop cleanly.
+      stop();
     }, { once: true });
   }
 
   function start() {
     if (!stopped) return;
     stopped = false;
-    const firstIdx = Math.floor(Math.random() * PLAYLIST.length);
-    queue = [];
-    playTrack(firstIdx);
+    // Honor the pre-rolled queue so the "on deck" track the user sees is
+    // exactly what actually plays. Previously this re-rolled a random
+    // first track and threw away the pre-filled queue, causing a visible
+    // mismatch between the dock and reality.
+    refillQueue();
+    playTrack(queue.shift());
   }
 
   function stop() {
     stopped = true;
     if (player) { player.pause(); player.src = ""; player = null; }
     trackIdx = -1;
+    isFinale = false;
     // Clear then refill so Now Playing reads "—" but the on-deck slots
     // still show what's waiting for the next session.
     queue = [];
@@ -113,7 +166,7 @@ const Music = (() => {
   // Warm the audio cache at page load. Each track gets fetched + decoded into
   // the browser's HTTP cache now, so the first real Music.start() doesn't
   // stall the main thread decoding a fresh .wav.
-  PLAYLIST.forEach(src => {
+  [...PLAYLIST, FINALE_TRACK].forEach(src => {
     const warm = new Audio();
     warm.preload = "auto";
     warm.src = src;
@@ -124,9 +177,14 @@ const Music = (() => {
     if (player) player.play().catch(() => {});
   });
 
-  // Force a specific track by substring match against PLAYLIST paths.
-  // Used to hard-pick "Into The BibleVerse" for the finale track.
+  // Force a specific track by substring match. The finale track lives
+  // outside PLAYLIST — if the caller asks for it, route through playFinale
+  // so the music ends cleanly when it finishes.
   function play(match) {
+    if (FINALE_TRACK.includes(match)) {
+      playFinale();
+      return;
+    }
     const idx = PLAYLIST.findIndex(p => p.includes(match));
     if (idx < 0) return;
     stopped = false;
